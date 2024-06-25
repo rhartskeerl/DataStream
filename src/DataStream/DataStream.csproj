@@ -14,6 +14,9 @@
     <RepositoryUrl>https://github.com/rhartskeerl/DataStream</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <PackageId>Hartskeerl.$(AssemblyName)</PackageId>
+    <Product>Hartskeerl.$(AssemblyName)</Product>
+    <Version>1.0.5</Version>
   </PropertyGroup>
 
   <ItemGroup>

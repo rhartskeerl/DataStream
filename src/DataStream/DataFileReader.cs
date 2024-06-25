@@ -16,6 +16,7 @@ public class DataFileReader : DbDataReader, IDataReader
     private readonly DataFileHeader _header;
     private string? _line;
     private JsonElement?[]? _jsonLine;
+    private int _recordsAffected = 0;
 
     /// <summary>
     /// Create a new instance of <see cref="DataFileReader"/>
@@ -47,7 +48,7 @@ public class DataFileReader : DbDataReader, IDataReader
 
     public override bool IsClosed => throw new NotImplementedException();
 
-    public override int RecordsAffected => throw new NotImplementedException();
+    public override int RecordsAffected => _recordsAffected;
 
     public override bool GetBoolean(int ordinal)
     {
@@ -184,6 +185,7 @@ public class DataFileReader : DbDataReader, IDataReader
             }
             _buffer[i] = MapToObject(_jsonLine[i], _header.Columns[i].DataType);
         }
+        _recordsAffected++;
         return true;
     }
     private DataFileHeader ParseHeader()

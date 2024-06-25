@@ -17,16 +17,17 @@ public class DataFileStream(IDataReader reader) : Stream, IDisposable
     private int _position = 0;              // The position in the current row
     private int _totalLength = 0;           // The length with the newline
     private int _netLength = 0;             // The length without the newline
+    private int _recordsAffected = 0;       // The number of records affected
 
     public override bool CanRead => true;
 
-    public override bool CanSeek => throw new NotImplementedException();
+    public override bool CanSeek => false;
 
-    public override bool CanWrite => throw new NotImplementedException();
+    public override bool CanWrite => false;
 
-    public override long Length => throw new NotImplementedException();
+    public override long Length => throw new NotSupportedException();
 
-    public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+    public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
     public override void Flush()
     {
@@ -75,18 +76,37 @@ public class DataFileStream(IDataReader reader) : Stream, IDisposable
 
     public override long Seek(long offset, SeekOrigin origin)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public override void SetLength(long value)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public override void Write(byte[] buffer, int offset, int count)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
+
+    /// <summary>
+    /// The final row read. You can use this to get the last value of a specific column.
+    /// This can be the base for reading the next section.
+    /// </summary>
+    public object[] FinalRow
+    {
+        get; private set;
+    }
+
+    /// <summary>
+    /// The header for the data. Use this in combination with <see cref="FinalRow"/> to identify which column to read.
+    /// </summary>
+    public DataFileHeader Header
+    {
+        get; private set;
+    }
+
+    public int RecordsAffected => _recordsAffected;
 
     private byte[] ReadHeader()
     {
@@ -96,16 +116,21 @@ public class DataFileStream(IDataReader reader) : Stream, IDisposable
         {
             header.Columns[i] = new DataFileColumn(reader.GetName(i), reader.GetFieldType(i).Name);
         }
+        Header = header;
         return JsonSerializer.SerializeToUtf8Bytes(header, Constants.JsonOptions);
     }
 
     private byte[]? ReadRow()
     {
         if (!reader.Read())
+        {
+            FinalRow = JsonSerializer.Deserialize<object[]>(_currentRow, Constants.JsonOptions) ?? [];
             return null;
+        }
 
         var row = new object[reader.FieldCount];
         reader.GetValues(row);
+        _recordsAffected++;
         return JsonSerializer.SerializeToUtf8Bytes(row, Constants.JsonOptions);
     }
 }
